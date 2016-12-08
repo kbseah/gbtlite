@@ -50,36 +50,54 @@ var margin = { top:25,
     bottom: 50};
 var height = 600 - margin.top - margin.bottom;
 var width = 850 - margin.left - margin.right;
-
 // Define main chart object
 var chart = d3.select(".chart")
 	.attr("height",height + margin.bottom + margin.top)
 	.attr("width",width + margin.left + margin.right)
 	.append("g") // Append g object to space margins
 	.attr("transform","translate(" + margin.left + "," + margin.top + ")");
-
 // Background color for main chart plot area
 chart.append("rect")
 	.attr("height",height)
 	.attr("width",width)
 	.attr("fill","#feffe7");
+// Placeholder text before data are loaded
+chart.append("text") 
+	.attr ("x",(width/2))
+    .attr("y", (height/2))
+    .style("text-anchor","middle")
+    .style("font-family","sans-serif")
+    .style("font-size","24px")
+    .style("fill","lightgrey")
+    .text("Upload coverage statistics and click 'Draw graphs'");
 
-// Define length plot chart size
-var lenplotMargin = { top:20, right:20, left:50, bottom:20};
+// Define length histogram chart size
+var lenplotMargin = { top:20, 
+	right:20, 
+	left:50, 
+	bottom:20};
 var lenplotHeight = 350 - lenplotMargin.top - lenplotMargin.bottom;
 var lenplotWidth = 400 - lenplotMargin.left - lenplotMargin.right;
-
-// Define length plot chart object
+// Define length histogram chart object
 var lenplot = d3.select(".lenplot")
 	.attr("height",lenplotHeight + lenplotMargin.top + lenplotMargin.bottom)
 	.attr("width", lenplotWidth + lenplotMargin.left + lenplotMargin.right)
 	.append("g") // Space margins
 	.attr("transform","translate(" + lenplotMargin.left + "," + lenplotMargin.top + ")");
-// Background color 
+// Background color for length histogram chart
 lenplot.append("rect")
 	.attr("height",lenplotHeight)
 	.attr("width",lenplotWidth)
 	.attr("fill", "#feffe7");
+// Placeholder text before data are loaded
+lenplot.append("text")
+	.attr("x",(lenplotWidth/2))
+	.attr("y",(lenplotHeight/2))
+    .style("text-anchor","middle")
+    .style("font-family","sans-serif")
+    .style("font-size","18px")
+    .style("fill","lightgrey")
+    .text("Histogram of contig lengths");
 
 // Div element for tooltip animations
 var div = d3.select("body")
@@ -87,7 +105,28 @@ var div = d3.select("body")
 	.attr("class","tooltip")
 	.style("opacity",0);
 
+// Define summary stats object for later
+var summaryStats = d3.select(".summaryStats");
+// Placeholder text before data are loaded
+summaryStats.append("p") 
+    .style("font-family","sans-serif")
+    .style("font-size","10pt")
+    .style("color","lightgrey")
+    .text("Descriptive statistics on assembly")
+
+// Default settings
+
 function drawGraph() { // This function is called when "draw" button is pressed
+
+	// Clear existing contents
+	chart.selectAll("circle").remove();
+	chart.selectAll(".axis").remove();
+	chart.selectAll("text").remove();
+	lenplot.selectAll(".axis").remove();
+	lenplot.selectAll(".bar").remove();
+	lenplot.selectAll("text").remove();
+	summaryStats.selectAll("p").remove();
+	console.log(summaryStats);
 
     // Linear scale for x-axis (GC%)
     var x = d3.scaleLinear()
@@ -209,8 +248,7 @@ function drawGraph() { // This function is called when "draw" button is pressed
     				units: "bp" }
     			];
     // Output results
-    var summaryStats = d3.select(".summaryStats")
-    	.selectAll("p")
+    summaryStats.selectAll("p")
     	.data(stats)
     	.enter().append("p")
     	.style("font-family","sans-serif")
