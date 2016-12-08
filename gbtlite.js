@@ -37,7 +37,7 @@ function parseFile() {
     data.forEach(function (d) { d.Length = +d.Length; } );
     data.forEach(function (d) { d.Ref_GC = +d.Ref_GC; } );
     // Check for correct input
-    console.log(doesColumnExist);
+    // console.log(doesColumnExist); // testing
     if (! doesColumnExist) {
     	alert("Please check your input file.");
     }
@@ -127,7 +127,7 @@ function drawGraph(pointRadParam) { // This function is called when "draw" butto
 	lenplot.selectAll(".bar").remove();
 	lenplot.selectAll("text").remove();
 	summaryStats.selectAll("p").remove();
-	console.log(summaryStats);
+	// console.log(summaryStats); // testing
 
     // Linear scale for x-axis (GC%)
     var x = d3.scaleLinear()
