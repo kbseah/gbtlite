@@ -1,0 +1,99 @@
+<!DOCTYPE html>
+<meta charset="utf-8">
+<head>
+<style>
+    .axis text {
+        font-size: 10px;
+        font-family: sans-serif;
+    }
+
+    .axis path,
+    .axis line {
+        fill:none;
+        stroke: black;
+        shape-rendering: crispEdges;
+    }
+    
+    .bar rect {
+    	fill: blue;
+    	fill-opacity: 0.5;
+    }
+    .bar text {
+    	fill: black;
+    	font: 10px sans-serif;
+    }
+
+div.tooltip {
+    position: absolute;
+    text-align: center;
+    width: 100px;
+    height: 50px;
+    padding: 2px;
+    font: 10px sans-serif;
+    background: lightgrey;
+    border: 0px;
+    border-radius: 8px;
+    pointer-events:none;
+}
+
+h1 {
+	text-align: center;
+	font-family: sans-serif;
+}
+
+h2 {
+	text-align: center;
+	font-family: sans-serif;
+	color: grey;
+	font-size: 16pt;
+}
+</style>
+</head>
+
+<body>
+<h1>gbtlite - Visualize metagenomes in a web browser</h1>
+<div id="frontmatter" style="width:600px;margin:auto">
+<p>Powered by <a href="https://d3js.org/">D3.js</a> version 4. Best viewed in a desktop browser.</p>
+<p><i>Instructions</i>: Load coverage statistics ("covstats") file produced by the <a href="https://sourceforge.net/projects/bbmap/">bbmap.sh read mapper</a> (but first remove # character from header line) and click "Draw graphs". Mouseover on coverage-GC plot gives info on individual contigs. See demo data for examples. 
+<p><i>Download demo data</i>: <a href="SampleA2.covstats">gutless oligochaete worm</a> (<a href="http://genome.jgi.doe.gov/OlaalgELextract2/OlaalgELextract2.info.html">ref</a>) | <a href="AB_assem_megahit.covstats">artificial metagenome</a> (<a href="https://www.ncbi.nlm.nih.gov/pubmed/23387867">ref</a>)</p>
+</div>
+
+<div id="input" style="width:600px;margin:auto;font-family:sans-serif;font-size:10pt">
+	<input type="file" onchange="loadFile()" />
+	<button onclick="drawGraph()">Draw graphs</button>
+	<br />
+	Filter by contig length: 
+	<button onclick="filter(500)">500bp</button>
+	<button onclick="filter(1000)">1kbp</button>
+	<button onclick="filter(10000)">10kbp</button>
+	<button onclick="filter(100000)">100kbp</button>
+	<button onclick="filter(1000000)">1Mbp</button>
+	<br />
+	<!-- Adjust plot point size: to be implemented -->
+</div>
+
+<div style="width:1000px;margin:auto">
+	<!-- Main plot goes here -->
+	<div style="width:1000px; margin: 0 auto;">
+		<h2>Coverage-GC plot</h2>
+		<svg class="chart" style="display:block; margin: auto"></svg>
+	</div> 
+	
+	<!-- Contig length histogram -->
+	<div style="width:500px; float:left; margin: auto">
+		<h2>Contig length histogram</h2>
+		<svg class="lenplot" style="display:block; margin: auto"></svg>
+	</div> 	
+	
+	<!-- Summary statistics on assembly -->
+	<div class="summaryStats" style="width:250px; float:left; margin: auto"> 
+		<h2>Summary statistics</h2>
+	</div> 
+
+</div>
+
+<script src="d3/d3.min.js"></script>
+<script src="gbtlite.js"></script>
+
+</div>
+</body>
