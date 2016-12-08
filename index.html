@@ -60,7 +60,7 @@ h2 {
 
 <div id="input" style="width:600px;margin:auto;font-family:sans-serif;font-size:10pt">
 	<input type="file" onchange="loadFile()" />
-	<button onclick="drawGraph()">Draw graphs</button>
+	<button onclick="drawGraph(0.01)">Draw graphs</button>
 	<br />
 	Filter by contig length: 
 	<button onclick="filter(500)">500bp</button>
@@ -69,7 +69,11 @@ h2 {
 	<button onclick="filter(100000)">100kbp</button>
 	<button onclick="filter(1000000)">1Mbp</button>
 	<br />
-	<!-- Adjust plot point size: to be implemented -->
+	Adjust plot point size:
+	<button onclick="drawGraph(0.005)">1%</button>
+	<button onclick="drawGraph(0.01)">2%</button>
+	<button onclick="drawGraph(0.025)">5%</button>
+	<button onclick="drawGraph(0.05)">10%</button>
 </div>
 
 <div style="width:1000px;margin:auto">

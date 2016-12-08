@@ -115,8 +115,9 @@ summaryStats.append("p")
     .text("Descriptive statistics on assembly")
 
 // Default settings
+var pointRadParam = 0.01; // Default max plot diameter is 2% of plot width
 
-function drawGraph() { // This function is called when "draw" button is pressed
+function drawGraph(pointRadParam) { // This function is called when "draw" button is pressed
 
 	// Clear existing contents
 	chart.selectAll("circle").remove();
@@ -155,7 +156,7 @@ function drawGraph() { // This function is called when "draw" button is pressed
     // Sqrt scale for plot points (length)
     var rad = d3.scaleSqrt()
         .domain([0,d3.max(data, function(d) {return d.Length;} )])
-        .range([0,width*0.01]); // Max plot diameter is 2% of plot width
+        .range([0,width*pointRadParam]); // Max point diameter set here
 
     // horizontal axis
     var xAxis = d3.axisBottom(x)
