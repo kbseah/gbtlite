@@ -15,31 +15,28 @@ var f3r = d3.format (".3r"); // Rounded decimal 3 significant figures
 //   Adapted from 
 //   http://stackoverflow.com/questions/36079390/parse-uploaded-csv-file-using-d3-js
 var reader = new FileReader();
-var data;
-
+var data1;
 function loadFile() {
 	var file = document.querySelector('input[type=file]').files[0];
 	reader.addEventListener("load",parseFile,false);
-	if(file) {
-	reader.readAsText(file);
-	}
+	if(file) { reader.readAsText(file); }
 }
-
 function parseFile() {
 	var doesColumnExist = false;
-	data = d3.tsvParse(reader.result, function(d) {
+	data1 = d3.tsvParse(reader.result, function(d) {
 		doesColumnExist = d.hasOwnProperty("Ref_GC");
 		return d;
 	});
 	// Interpret relevant fields as numeric - important!
-	data.forEach(function (d) { d.Avg_fold = +d.Avg_fold; } );
-	data.forEach(function (d) { d.Length = +d.Length; } );
-	data.forEach(function (d) { d.Ref_GC = +d.Ref_GC; } );
+	data1.forEach(function (d) { d.Avg_fold = +d.Avg_fold; } );
+	data1.forEach(function (d) { d.Length = +d.Length; } );
+	data1.forEach(function (d) { d.Ref_GC = +d.Ref_GC; } );
 	// Check for correct input
 	// console.log(doesColumnExist); // testing
 	if (! doesColumnExist) {
 		alert("Please check your input file.");
 	}
+	console.log(data1);
 }
 
 // Define main chart size
@@ -121,7 +118,7 @@ var y = d3.scaleLog(); // Scale for y-axis
 var ylin = d3.scaleLinear(); // Alternative linear scale for y-axis
 var ysqrt = d3.scaleSqrt(); // Alternative sqrt scale for y-axis
 
-function drawGraph() { // This function is called when "draw" button is pressed
+function drawGraph(data,dcolor) { // This function is called when "draw" button is pressed
 
 	// Clear existing contents
 	chart.selectAll("circle").remove();
@@ -216,7 +213,7 @@ function drawGraph() { // This function is called when "draw" button is pressed
 		.attr("cx", function(d) { return x(d.Ref_GC); })
 		.attr("cy", function(d) { return y(d.Avg_fold); })
 		.attr("r", function(d) { return rad(d.Length); })
-		.style("fill","blue")
+		.style("fill",dcolor)
 		.style("fill-opacity", 0.3)
 		//.style("stroke","grey")
 		//.style("stroke-opacity",0.1)
@@ -286,7 +283,7 @@ function drawGraph() { // This function is called when "draw" button is pressed
 		.range([lenplotHeight, 0]); // Inverse mapping of y-axis
 		// Draw x axis
 	var lenplotxAxis = d3.axisBottom(lenScaleX)
-		.ticks(10,".1s");
+		.ticks(5,".1s");
 	lenplot.append("g")
 		.attr("class","x axis")
 		.attr("transform","translate(0," + lenplotHeight + ")")
@@ -313,12 +310,15 @@ function drawGraph() { // This function is called when "draw" button is pressed
 			);
 	bar.append("rect")
 		.attr("x",1) // What does this do??
+		.attr("class","bar")
 		.attr("width", lenScaleX(lenBins[0].x1) - lenScaleX(lenBins[0].x0) - 1)
-		.attr("height", function(d) { return lenplotHeight - lenScaleY(d.length); });
+		.attr("height", function(d) { return lenplotHeight - lenScaleY(d.length); })
+		.style("fill",dcolor)
+		.style("fill-opacity",0.5);
 
 }
 
-function filter(lenmin) {
+function filter(lenmin) { // Display points by cutoff length
 	chart.selectAll("circle")
 		.filter(function(d) { return d.Length < lenmin; })
 		.attr("display","none");
@@ -328,42 +328,53 @@ function filter(lenmin) {
 		.attr("display", "initial");
 };
 
-function resizePoint(mult) {
+function resizePoint(mult) { // Resize plot points
 	chart.selectAll("circle").transition()
 		.duration(800)
 		.attr("r", function(d) { return mult*rad(d.Length); });
 }
 
-function yaxisLinear() {
+function yaxisLinear() { // Transition plot to linear y axis
 	chart.selectAll("circle").transition()
-		.delay(800)
+		.duration(800)
 		.attr("cy", function(d) { return ylin(d.Avg_fold); });
 	// Rewrite axis
 	var yAxislin = d3.axisLeft(ylin)
 		.ticks(10,".1s"); 
 	chart.select(".y.axis").transition()
-		.delay(800)
+		.duration(800)
 		.call(yAxislin);
 }
 
-function yaxisLog() {
+function yaxisLog() { // Transition plot (back) to log y axis
 	chart.selectAll("circle").transition()
-		.delay(800)
+		.duration(800)
 		.attr("cy", function(d) { return y(d.Avg_fold); });
 	var yAxislog = d3.axisLeft(y) // Rewrite axis
 		.ticks(10,".1s"); 
 	chart.select(".y.axis").transition()
-		.delay(800)
+		.duration(800)
 		.call(yAxislog);
 }
 
-function yaxisSqrt() {
+function yaxisSqrt() { // Transition plot to sqrt y axis
 	chart.selectAll("circle").transition()
-		.delay(800)
+		.duration(800)
 		.attr("cy", function(d) { return ysqrt(d.Avg_fold); });
 	var yAxissqrt = d3.axisLeft(ysqrt) // Rewrite axis
 		.ticks(10,".1s"); 
 	chart.select(".y.axis").transition()
-		.delay(800)
+		.duration(800)
 		.call(yAxissqrt);
+}
+
+function randomColor() {
+	// randomizer from https://www.paulirish.com/2009/random-hex-color-code-snippets/
+	var randColor = '#'+Math.floor(Math.random()*16777215).toString(16);
+	chart.selectAll("circle").transition()
+		.duration(800)
+		.style("fill", randColor);
+	lenplot.selectAll(".bar").transition()
+		.duration(800)
+		.style("fill", randColor);
 }
