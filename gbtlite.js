@@ -52,6 +52,11 @@ var chart = d3.select(".chart")
 	.attr("width",width + margin.left + margin.right)
 	.append("g") // Append g object to space margins
 	.attr("transform","translate(" + margin.left + "," + margin.top + ")");
+	// Testing code for zooming...
+	//.call(d3.zoom().on("zoom",function () { 
+	//	chart.attr("transform",d3.event.transform);
+	//	}));
+	
 // Background color for main chart plot area
 chart.append("rect")
 	.attr("height",height)
@@ -377,4 +382,13 @@ function randomColor() {
 	lenplot.selectAll(".bar").transition()
 		.duration(800)
 		.style("fill", randColor);
+}
+
+function notausgang() {
+	chart.selectAll("circle").transition()
+		.duration(1600)
+		.attr("r", function(d) { return 100*rad(d.Length); });
+	window.setTimeout(function() { 
+		window.location.href = "https://www.youtube.com/watch?v=oHg5SJYRHA0";
+		}, 1600);
 }
