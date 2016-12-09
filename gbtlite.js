@@ -41,11 +41,11 @@ function parseFile() {
 
 // Define main chart size
 var margin = { top:25,
-	right: 100,
+	right: 50,
 	left: 50,
 	bottom: 50};
 var height = 600 - margin.top - margin.bottom;
-var width = 850 - margin.left - margin.right;
+var width = 900 - margin.left - margin.right;
 // Define main chart object
 var chart = d3.select(".chart")
 	.attr("height",height + margin.bottom + margin.top)
