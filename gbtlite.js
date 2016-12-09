@@ -118,7 +118,8 @@ var pointRadParam = 0.01; // Default max plot diameter is 2% of plot width
 var rad = d3.scaleSqrt(); // Scale for plot points
 var x = d3.scaleLinear(); // Scale for x-axis
 var y = d3.scaleLog(); // Scale for y-axis
-
+var ylin = d3.scaleLinear(); // Alternative linear scale for y-axis
+var ysqrt = d3.scaleSqrt(); // Alternative sqrt scale for y-axis
 
 function drawGraph() { // This function is called when "draw" button is pressed
 
@@ -154,6 +155,19 @@ function drawGraph() { // This function is called when "draw" button is pressed
 			])
 		.range([height,1]);
 		// Invert min and max because SVG coord starts from upper left corner
+	
+	// Alternative linear scale for y-axis (coverage)
+	ylin.domain([yMin*0.9,
+		     d3.max(data,function(d) { return d.Avg_fold; })* 1.1
+			])
+		.range([height,1]);
+	
+	// Alternative sqrt scale for y-axis (coverage)
+	ysqrt.domain([yMin*0.9,
+		     d3.max(data,function(d) { return d.Avg_fold; })* 1.1
+			])
+		.range([height,1]);
+	
 	// Sqrt scale for plot points (length)
 	rad.domain([0,d3.max(data, function(d) {return d.Length;} )])
 		.range([0,width*pointRadParam]); // Max point diameter set here
@@ -318,4 +332,38 @@ function resizePoint(mult) {
 	chart.selectAll("circle").transition()
 		.duration(800)
 		.attr("r", function(d) { return mult*rad(d.Length); });
+}
+
+function yaxisLinear() {
+	chart.selectAll("circle").transition()
+		.delay(800)
+		.attr("cy", function(d) { return ylin(d.Avg_fold); });
+	// Rewrite axis
+	var yAxislin = d3.axisLeft(ylin)
+		.ticks(10,".1s"); 
+	chart.select(".y.axis").transition()
+		.delay(800)
+		.call(yAxislin);
+}
+
+function yaxisLog() {
+	chart.selectAll("circle").transition()
+		.delay(800)
+		.attr("cy", function(d) { return y(d.Avg_fold); });
+	var yAxislog = d3.axisLeft(y) // Rewrite axis
+		.ticks(10,".1s"); 
+	chart.select(".y.axis").transition()
+		.delay(800)
+		.call(yAxislog);
+}
+
+function yaxisSqrt() {
+	chart.selectAll("circle").transition()
+		.delay(800)
+		.attr("cy", function(d) { return ysqrt(d.Avg_fold); });
+	var yAxissqrt = d3.axisLeft(ysqrt) // Rewrite axis
+		.ticks(10,".1s"); 
+	chart.select(".y.axis").transition()
+		.delay(800)
+		.call(yAxissqrt);
 }
