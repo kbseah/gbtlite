@@ -10,7 +10,6 @@ var f3s = d3.format (".3s"); // SI prefix and 3 significant figures
 var f0pc = d3.format (".0%"); // Rounded percentage
 var f3r = d3.format (".3r"); // Rounded decimal 3 significant figures
 
-
 // Load coverage stats file
 //   Adapted from 
 //   http://stackoverflow.com/questions/36079390/parse-uploaded-csv-file-using-d3-js
@@ -51,11 +50,8 @@ var chart = d3.select(".chart")
 	.attr("height",height + margin.bottom + margin.top)
 	.attr("width",width + margin.left + margin.right)
 	.append("g") // Append g object to space margins
-	.attr("transform","translate(" + margin.left + "," + margin.top + ")");
-	// Testing code for zooming...
-	//.call(d3.zoom().on("zoom",function () { 
-	//	chart.attr("transform",d3.event.transform);
-	//	}));
+	.attr("transform","translate(" + margin.left + "," + margin.top + ")")
+	.call(d3.zoom().on("zoom", zoom));
 	
 // Background color for main chart plot area
 chart.append("rect")
@@ -122,6 +118,7 @@ var x = d3.scaleLinear(); // Scale for x-axis
 var y = d3.scaleLog(); // Scale for y-axis
 var ylin = d3.scaleLinear(); // Alternative linear scale for y-axis
 var ysqrt = d3.scaleSqrt(); // Alternative sqrt scale for y-axis
+var currentYaxis = "log"; // Keep track of which y axis is active
 
 function drawGraph(data,dcolor) { // This function is called when "draw" button is pressed
 
@@ -340,6 +337,7 @@ function resizePoint(mult) { // Resize plot points
 }
 
 function yaxisLinear() { // Transition plot to linear y axis
+	currentYaxis = "linear"; // Update tracking var
 	chart.selectAll("circle").transition()
 		.duration(800)
 		.attr("cy", function(d) { return ylin(d.Avg_fold); });
@@ -352,6 +350,7 @@ function yaxisLinear() { // Transition plot to linear y axis
 }
 
 function yaxisLog() { // Transition plot (back) to log y axis
+	currentYaxis = "log"; // Update tracking var
 	chart.selectAll("circle").transition()
 		.duration(800)
 		.attr("cy", function(d) { return y(d.Avg_fold); });
@@ -363,6 +362,7 @@ function yaxisLog() { // Transition plot (back) to log y axis
 }
 
 function yaxisSqrt() { // Transition plot to sqrt y axis
+	currentYaxis = "sqrt"; // Update tracking var
 	chart.selectAll("circle").transition()
 		.duration(800)
 		.attr("cy", function(d) { return ysqrt(d.Avg_fold); });
@@ -384,7 +384,52 @@ function randomColor() {
 		.style("fill", randColor);
 }
 
+function zoom() {
+	// Modified from https://bl.ocks.org/feyderm/03602b83146d69b1b6993e5f98123175
+	// Rescale by transform
+	var xNew = d3.event.transform.rescaleX(x);
+	chart.select(".x.axis").transition().duration(50)
+		// Have to call d3.axisBottom again because xAxis is in scope of drawGraph()
+		.call(d3.axisBottom(x).ticks(10, ".0%") 
+			.scale(d3.event.transform.rescaleX(x)));
+	var yNew;
+	if (currentYaxis == "log") { // Check which y axis active and rescale
+		yNew = d3.event.transform.rescaleY(y);
+		chart.select(".y.axis").transition().duration(50)
+			.call(d3.axisLeft(y).ticks(10,".1s")
+				.scale(d3.event.transform.rescaleY(y)));
+	} else if (currentYaxis == "linear") {
+		yNew = d3.event.transform.rescaleY(ylin);
+		chart.select(".y.axis").transition().duration(50)
+			.call(d3.axisLeft(y).ticks(10,".1s")
+				.scale(d3.event.transform.rescaleY(ylin)));
+	} else if (currentYaxis == "sqrt") {
+		yNew = d3.event.transform.rescaleY(ysqrt);
+		chart.select(".y.axis").transition().duration(50)
+			.call(d3.axisLeft(y).ticks(10,".1s")
+				.scale(d3.event.transform.rescaleY(ysqrt)));
+	}
+	// Resize plot points
+	chart.selectAll("circle")
+		.attr("cx", function(d) { return xNew(d.Ref_GC); })
+		.attr("cy", function(d) { return yNew(d.Avg_fold); });
+}
+
 function notausgang() {
+	chart.append("text")
+		.attr("class","notausgang")
+		.attr("x",width/2)
+		.attr("y",height/3)
+		.style("text-anchor","middle")
+		.style("font-family","sans-serif")
+		.style("font-size","8pt")
+		.style("fill-opacity","0")
+		.style("fill","green")
+		.text("Reticulating splines...");
+	chart.selectAll(".notausgang").transition()
+		.duration(1600)
+		.style("fill-opacity","1")
+		.style("font-size","48");
 	chart.selectAll("circle").transition()
 		.duration(1600)
 		.attr("r", function(d) { return 100*rad(d.Length); });
