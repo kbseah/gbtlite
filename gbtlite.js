@@ -307,13 +307,15 @@ function drawGraph() { // This function is called when "draw" button is pressed
 function filter(lenmin) {
 	chart.selectAll("circle")
 		.filter(function(d) { return d.Length < lenmin; })
-		.attr("display", "none");
+		.attr("display","none");
 	chart.selectAll("circle")
 		.filter(function(d) { return d.Length >= lenmin; })
+		.style("fill-opacity","0.3")
 		.attr("display", "initial");
 };
 
 function resizePoint(mult) {
-	chart.selectAll("circle")
+	chart.selectAll("circle").transition()
+		.duration(800)
 		.attr("r", function(d) { return mult*rad(d.Length); });
 }
