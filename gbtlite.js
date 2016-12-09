@@ -114,10 +114,14 @@ summaryStats.append("p")
     .style("color","lightgrey")
     .text("Descriptive statistics on assembly")
 
-// Default settings
+// Declare variables that need to be outside scope of drawGraph()
 var pointRadParam = 0.01; // Default max plot diameter is 2% of plot width
+var rad = d3.scaleSqrt(); // Scale for plot points
+var x = d3.scaleLinear(); // Scale for x-axis
+var y = d3.scaleLog(); // Scale for y-axis
 
-function drawGraph(pointRadParam) { // This function is called when "draw" button is pressed
+
+function drawGraph() { // This function is called when "draw" button is pressed
 
 	// Clear existing contents
 	chart.selectAll("circle").remove();
@@ -130,8 +134,7 @@ function drawGraph(pointRadParam) { // This function is called when "draw" butto
 	// console.log(summaryStats); // testing
 
     // Linear scale for x-axis (GC%)
-    var x = d3.scaleLinear()
-    	.domain([d3.min(data, function(d) {return d.Ref_GC; }) * 0.9,
+    x.domain([d3.min(data, function(d) {return d.Ref_GC; }) * 0.9,
     		d3.max(data, function(d) {return d.Ref_GC; }) * 1.1
    		 	])
     	.range([0,width]);
@@ -145,8 +148,7 @@ function drawGraph(pointRadParam) { // This function is called when "draw" butto
     }
     
     // Log scale for y-axis (coverage)
-    var y = d3.scaleLog()
-    	.domain([yMin / 2,
+    y.domain([yMin / 2,
         	// Div by 2 to avoid points directly on margin
     		d3.max(data, function(d) {return d.Avg_fold; }) * 1.5
         	// Mult by 1.5 to avoid points directly on margin
@@ -154,8 +156,7 @@ function drawGraph(pointRadParam) { // This function is called when "draw" butto
     	.range([height,1]);
         // Invert min and max because SVG coord starts from upper left corner
     // Sqrt scale for plot points (length)
-    var rad = d3.scaleSqrt()
-        .domain([0,d3.max(data, function(d) {return d.Length;} )])
+    rad.domain([0,d3.max(data, function(d) {return d.Length;} )])
         .range([0,width*pointRadParam]); // Max point diameter set here
 
     // horizontal axis
@@ -312,3 +313,8 @@ function filter(lenmin) {
     	.filter(function(d) { return d.Length >= lenmin; })
     	.attr("display", "initial");
 };
+
+function resizePoint(mult) {
+	chart.selectAll("circle")
+		.attr("r", function(d) { return mult*rad(d.Length); });
+}
