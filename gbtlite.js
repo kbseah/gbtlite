@@ -109,9 +109,10 @@ summaryStats.append("p")
 	.style("font-family","sans-serif")
 	.style("font-size","10pt")
 	.style("color","lightgrey")
-	.text("Descriptive statistics on assembly")
+	.text("Descriptive statistics on assembly");
 
 // Declare variables that need to be outside scope of drawGraph()
+var minlen = 1000; // Minimum length to plot contig
 var pointRadParam = 0.01; // Default max plot diameter is 2% of plot width
 var rad = d3.scaleSqrt(); // Scale for plot points
 var x = d3.scaleLinear(); // Scale for x-axis
@@ -120,7 +121,7 @@ var ylin = d3.scaleLinear(); // Alternative linear scale for y-axis
 var ysqrt = d3.scaleSqrt(); // Alternative sqrt scale for y-axis
 var currentYaxis = "log"; // Keep track of which y axis is active
 
-function drawGraph(data,dcolor) { // This function is called when "draw" button is pressed
+function drawGraph(data,dcolor,minlen) { // Draw coverage-GC plot
 
 	// Clear existing contents
 	chart.selectAll("circle").remove();
@@ -209,9 +210,11 @@ function drawGraph(data,dcolor) { // This function is called when "draw" button 
 
 	// Plot the points!
 	var point = chart.selectAll("circle")
-		.data(data)
+		//.data(data)
+		.data(data.filter(function (d) {return d.Length > minlen; })) 
+			// using javascript Array.filter - avoid empty circles which clutter DOM
 		.enter().append("circle")
-		.filter(function(d) {return d.Length > 500; }) // Subset length > 500
+		//.filter(function(d) {return d.Length > 10000; }) // Subset length > 500
 		.attr("cx", function(d) { return x(d.Ref_GC); })
 		.attr("cy", function(d) { return y(d.Avg_fold); })
 		.attr("r", function(d) { return rad(d.Length); })
