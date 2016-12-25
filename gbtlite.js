@@ -14,7 +14,7 @@ var f3r = d3.format (".3r"); // Rounded decimal 3 significant figures
 //   Adapted from 
 //   http://stackoverflow.com/questions/36079390/parse-uploaded-csv-file-using-d3-js
 var reader = new FileReader();
-var data1;
+var data1; // Store input data
 function loadFile() {
 	var file = document.querySelector('input[type=file]').files[0];
 	reader.addEventListener("load",parseFile,false);
@@ -123,6 +123,19 @@ var currentYaxis = "log"; // Keep track of which y axis is active
 
 function drawGraph(data,dcolor,minlen) { // Draw coverage-GC plot
 
+	var dataPlot;
+	// If more than 5k points, plot only longest 5k contigs
+	if (data.length > 5000) {
+		// Sort by contig length
+		dataPlot = data.sort(function(a,b) {
+			return b.Length - a.Length; 
+			});
+		// Take only first 5000 contigs
+		dataPlot = dataPlot.slice(0,5000);
+	} else {
+		dataPlot = data;
+	};
+
 	// Clear existing contents
 	chart.selectAll("circle").remove();
 	chart.selectAll(".axis").remove();
@@ -134,13 +147,13 @@ function drawGraph(data,dcolor,minlen) { // Draw coverage-GC plot
 	// console.log(summaryStats); // testing
 
 	// Linear scale for x-axis (GC%)
-	x.domain([d3.min(data, function(d) {return d.Ref_GC; }) * 0.9,
-			d3.max(data, function(d) {return d.Ref_GC; }) * 1.1
+	x.domain([d3.min(dataPlot, function(d) {return d.Ref_GC; }) * 0.9,
+			d3.max(dataPlot, function(d) {return d.Ref_GC; }) * 1.1
 				])
 		.range([0,width]);
 
 	// Condition to ignore extreme low y-axis values in scale
-	var yMin = d3.min(data, function(d) {return d.Avg_fold;});
+	var yMin = d3.min(dataPlot, function(d) {return d.Avg_fold;});
 	if (yMin < 0.05) {
 		yMin = 0.05;
 	} else {
@@ -150,7 +163,7 @@ function drawGraph(data,dcolor,minlen) { // Draw coverage-GC plot
 	// Log scale for y-axis (coverage)
 	y.domain([yMin / 2,
 		// Div by 2 to avoid points directly on margin
-			d3.max(data, function(d) {return d.Avg_fold; }) * 1.5
+			d3.max(dataPlot, function(d) {return d.Avg_fold; }) * 1.5
 		// Mult by 1.5 to avoid points directly on margin
 			])
 		.range([height,1]);
@@ -158,18 +171,18 @@ function drawGraph(data,dcolor,minlen) { // Draw coverage-GC plot
 	
 	// Alternative linear scale for y-axis (coverage)
 	ylin.domain([yMin*0.9,
-		     d3.max(data,function(d) { return d.Avg_fold; })* 1.1
+		     d3.max(dataPlot,function(d) { return d.Avg_fold; })* 1.1
 			])
 		.range([height,1]);
 	
 	// Alternative sqrt scale for y-axis (coverage)
 	ysqrt.domain([yMin*0.9,
-		     d3.max(data,function(d) { return d.Avg_fold; })* 1.1
+		     d3.max(dataPlot,function(d) { return d.Avg_fold; })* 1.1
 			])
 		.range([height,1]);
 	
 	// Sqrt scale for plot points (length)
-	rad.domain([0,d3.max(data, function(d) {return d.Length;} )])
+	rad.domain([0,d3.max(dataPlot, function(d) {return d.Length;} )])
 		.range([0,width*pointRadParam]); // Max point diameter set here
 
 	// horizontal axis
@@ -211,7 +224,7 @@ function drawGraph(data,dcolor,minlen) { // Draw coverage-GC plot
 	// Plot the points!
 	var point = chart.selectAll("circle")
 		//.data(data)
-		.data(data.filter(function (d) {return d.Length > minlen; })) 
+		.data(dataPlot.filter(function (d) {return d.Length > minlen; })) 
 			// using javascript Array.filter - avoid empty circles which clutter DOM
 		.enter().append("circle")
 		//.filter(function(d) {return d.Length > 10000; }) // Subset length > 500
@@ -271,6 +284,14 @@ function drawGraph(data,dcolor,minlen) { // Draw coverage-GC plot
 		.style("font-family","sans-serif")
 		.style("font-size","10pt")
 		.text(function(d) { return d.property + ": " + f3s(d.value) + d.units; });
+
+	// Add note to summary stats if plot points have been subsetted
+	if (data.length > 5000) {
+		summaryStats.append("p")
+			.style("font-family","sans-serif")
+			.style("font-size","10pt")
+			.text("Note: Only longest 5000 contigs plotted");
+	}
 
 	// Generate histogram of contig lengths
 		// Produce bins
