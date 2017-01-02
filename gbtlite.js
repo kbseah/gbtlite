@@ -135,6 +135,9 @@ function drawGraph(data,dcolor,minlen) { // Draw coverage-GC plot
 	} else {
 		dataPlot = data;
 	};
+	// Draw only points which are above minimum length
+	// using javascript Array.filter - avoid empty circles which clutter DOM
+	dataPlot = dataPlot.filter(function (d) {return d.Length > minlen; });
 
 	// Clear existing contents
 	chart.selectAll("circle").remove();
@@ -224,8 +227,7 @@ function drawGraph(data,dcolor,minlen) { // Draw coverage-GC plot
 	// Plot the points!
 	var point = chart.selectAll("circle")
 		//.data(data)
-		.data(dataPlot.filter(function (d) {return d.Length > minlen; })) 
-			// using javascript Array.filter - avoid empty circles which clutter DOM
+		.data(dataPlot, function(d){return d.ID;}) // Key by contig ID
 		.enter().append("circle")
 		//.filter(function(d) {return d.Length > 10000; }) // Subset length > 500
 		.attr("cx", function(d) { return x(d.Ref_GC); })
@@ -289,8 +291,9 @@ function drawGraph(data,dcolor,minlen) { // Draw coverage-GC plot
 	if (data.length > 5000) {
 		summaryStats.append("p")
 			.style("font-family","sans-serif")
+			.style("font-style","italic")
 			.style("font-size","10pt")
-			.text("Note: Only longest 5000 contigs plotted");
+			.text("NB: Only longest 5000 contigs plotted");
 	}
 
 	// Generate histogram of contig lengths
