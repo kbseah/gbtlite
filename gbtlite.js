@@ -10,12 +10,11 @@ var f3s = d3.format (".3s"); // SI prefix and 3 significant figures
 var f0pc = d3.format (".0%"); // Rounded percentage
 var f3r = d3.format (".3r"); // Rounded decimal 3 significant figures
 
-
 // Load coverage stats file
 //   Adapted from 
 //   http://stackoverflow.com/questions/36079390/parse-uploaded-csv-file-using-d3-js
 var reader = new FileReader();
-var data1;
+var data1; // Store input data
 function loadFile() {
 	var file = document.querySelector('input[type=file]').files[0];
 	reader.addEventListener("load",parseFile,false);
@@ -51,7 +50,9 @@ var chart = d3.select(".chart")
 	.attr("height",height + margin.bottom + margin.top)
 	.attr("width",width + margin.left + margin.right)
 	.append("g") // Append g object to space margins
-	.attr("transform","translate(" + margin.left + "," + margin.top + ")");
+	.attr("transform","translate(" + margin.left + "," + margin.top + ")")
+	.call(d3.zoom().on("zoom", zoom));
+	
 // Background color for main chart plot area
 chart.append("rect")
 	.attr("height",height)
@@ -108,17 +109,35 @@ summaryStats.append("p")
 	.style("font-family","sans-serif")
 	.style("font-size","10pt")
 	.style("color","lightgrey")
-	.text("Descriptive statistics on assembly")
+	.text("Descriptive statistics on assembly");
 
 // Declare variables that need to be outside scope of drawGraph()
+var minlen = 1000; // Minimum length to plot contig
 var pointRadParam = 0.01; // Default max plot diameter is 2% of plot width
 var rad = d3.scaleSqrt(); // Scale for plot points
 var x = d3.scaleLinear(); // Scale for x-axis
 var y = d3.scaleLog(); // Scale for y-axis
 var ylin = d3.scaleLinear(); // Alternative linear scale for y-axis
 var ysqrt = d3.scaleSqrt(); // Alternative sqrt scale for y-axis
+var currentYaxis = "log"; // Keep track of which y axis is active
 
-function drawGraph(data,dcolor) { // This function is called when "draw" button is pressed
+function drawGraph(data,dcolor,minlen) { // Draw coverage-GC plot
+
+	var dataPlot;
+	// If more than 5k points, plot only longest 5k contigs
+	if (data.length > 5000) {
+		// Sort by contig length
+		dataPlot = data.sort(function(a,b) {
+			return b.Length - a.Length; 
+			});
+		// Take only first 5000 contigs
+		dataPlot = dataPlot.slice(0,5000);
+	} else {
+		dataPlot = data;
+	};
+	// Draw only points which are above minimum length
+	// using javascript Array.filter - avoid empty circles which clutter DOM
+	dataPlot = dataPlot.filter(function (d) {return d.Length > minlen; });
 
 	// Clear existing contents
 	chart.selectAll("circle").remove();
@@ -131,13 +150,13 @@ function drawGraph(data,dcolor) { // This function is called when "draw" button 
 	// console.log(summaryStats); // testing
 
 	// Linear scale for x-axis (GC%)
-	x.domain([d3.min(data, function(d) {return d.Ref_GC; }) * 0.9,
-			d3.max(data, function(d) {return d.Ref_GC; }) * 1.1
+	x.domain([d3.min(dataPlot, function(d) {return d.Ref_GC; }) * 0.9,
+			d3.max(dataPlot, function(d) {return d.Ref_GC; }) * 1.1
 				])
 		.range([0,width]);
 
 	// Condition to ignore extreme low y-axis values in scale
-	var yMin = d3.min(data, function(d) {return d.Avg_fold;});
+	var yMin = d3.min(dataPlot, function(d) {return d.Avg_fold;});
 	if (yMin < 0.05) {
 		yMin = 0.05;
 	} else {
@@ -147,7 +166,7 @@ function drawGraph(data,dcolor) { // This function is called when "draw" button 
 	// Log scale for y-axis (coverage)
 	y.domain([yMin / 2,
 		// Div by 2 to avoid points directly on margin
-			d3.max(data, function(d) {return d.Avg_fold; }) * 1.5
+			d3.max(dataPlot, function(d) {return d.Avg_fold; }) * 1.5
 		// Mult by 1.5 to avoid points directly on margin
 			])
 		.range([height,1]);
@@ -155,18 +174,18 @@ function drawGraph(data,dcolor) { // This function is called when "draw" button 
 	
 	// Alternative linear scale for y-axis (coverage)
 	ylin.domain([yMin*0.9,
-		     d3.max(data,function(d) { return d.Avg_fold; })* 1.1
+		     d3.max(dataPlot,function(d) { return d.Avg_fold; })* 1.1
 			])
 		.range([height,1]);
 	
 	// Alternative sqrt scale for y-axis (coverage)
 	ysqrt.domain([yMin*0.9,
-		     d3.max(data,function(d) { return d.Avg_fold; })* 1.1
+		     d3.max(dataPlot,function(d) { return d.Avg_fold; })* 1.1
 			])
 		.range([height,1]);
 	
 	// Sqrt scale for plot points (length)
-	rad.domain([0,d3.max(data, function(d) {return d.Length;} )])
+	rad.domain([0,d3.max(dataPlot, function(d) {return d.Length;} )])
 		.range([0,width*pointRadParam]); // Max point diameter set here
 
 	// horizontal axis
@@ -207,9 +226,10 @@ function drawGraph(data,dcolor) { // This function is called when "draw" button 
 
 	// Plot the points!
 	var point = chart.selectAll("circle")
-		.data(data)
+		//.data(data)
+		.data(dataPlot, function(d){return d.ID;}) // Key by contig ID
 		.enter().append("circle")
-		.filter(function(d) {return d.Length > 500; }) // Subset length > 500
+		//.filter(function(d) {return d.Length > 10000; }) // Subset length > 500
 		.attr("cx", function(d) { return x(d.Ref_GC); })
 		.attr("cy", function(d) { return y(d.Avg_fold); })
 		.attr("r", function(d) { return rad(d.Length); })
@@ -266,6 +286,15 @@ function drawGraph(data,dcolor) { // This function is called when "draw" button 
 		.style("font-family","sans-serif")
 		.style("font-size","10pt")
 		.text(function(d) { return d.property + ": " + f3s(d.value) + d.units; });
+
+	// Add note to summary stats if plot points have been subsetted
+	if (data.length > 5000) {
+		summaryStats.append("p")
+			.style("font-family","sans-serif")
+			.style("font-style","italic")
+			.style("font-size","10pt")
+			.text("NB: Only longest 5000 contigs plotted");
+	}
 
 	// Generate histogram of contig lengths
 		// Produce bins
@@ -335,6 +364,7 @@ function resizePoint(mult) { // Resize plot points
 }
 
 function yaxisLinear() { // Transition plot to linear y axis
+	currentYaxis = "linear"; // Update tracking var
 	chart.selectAll("circle").transition()
 		.duration(800)
 		.attr("cy", function(d) { return ylin(d.Avg_fold); });
@@ -347,6 +377,7 @@ function yaxisLinear() { // Transition plot to linear y axis
 }
 
 function yaxisLog() { // Transition plot (back) to log y axis
+	currentYaxis = "log"; // Update tracking var
 	chart.selectAll("circle").transition()
 		.duration(800)
 		.attr("cy", function(d) { return y(d.Avg_fold); });
@@ -358,6 +389,7 @@ function yaxisLog() { // Transition plot (back) to log y axis
 }
 
 function yaxisSqrt() { // Transition plot to sqrt y axis
+	currentYaxis = "sqrt"; // Update tracking var
 	chart.selectAll("circle").transition()
 		.duration(800)
 		.attr("cy", function(d) { return ysqrt(d.Avg_fold); });
@@ -377,4 +409,58 @@ function randomColor() {
 	lenplot.selectAll(".bar").transition()
 		.duration(800)
 		.style("fill", randColor);
+}
+
+function zoom() {
+	// Modified from https://bl.ocks.org/feyderm/03602b83146d69b1b6993e5f98123175
+	// Rescale by transform
+	var xNew = d3.event.transform.rescaleX(x);
+	chart.select(".x.axis").transition().duration(50)
+		// Have to call d3.axisBottom again because xAxis is in scope of drawGraph()
+		.call(d3.axisBottom(x).ticks(10, ".0%") 
+			.scale(d3.event.transform.rescaleX(x)));
+	var yNew;
+	if (currentYaxis == "log") { // Check which y axis active and rescale
+		yNew = d3.event.transform.rescaleY(y);
+		chart.select(".y.axis").transition().duration(50)
+			.call(d3.axisLeft(y).ticks(10,".1s")
+				.scale(d3.event.transform.rescaleY(y)));
+	} else if (currentYaxis == "linear") {
+		yNew = d3.event.transform.rescaleY(ylin);
+		chart.select(".y.axis").transition().duration(50)
+			.call(d3.axisLeft(y).ticks(10,".1s")
+				.scale(d3.event.transform.rescaleY(ylin)));
+	} else if (currentYaxis == "sqrt") {
+		yNew = d3.event.transform.rescaleY(ysqrt);
+		chart.select(".y.axis").transition().duration(50)
+			.call(d3.axisLeft(y).ticks(10,".1s")
+				.scale(d3.event.transform.rescaleY(ysqrt)));
+	}
+	// Resize plot points
+	chart.selectAll("circle")
+		.attr("cx", function(d) { return xNew(d.Ref_GC); })
+		.attr("cy", function(d) { return yNew(d.Avg_fold); });
+}
+
+function notausgang() {
+	chart.append("text")
+		.attr("class","notausgang")
+		.attr("x",width/2)
+		.attr("y",height/3)
+		.style("text-anchor","middle")
+		.style("font-family","sans-serif")
+		.style("font-size","8pt")
+		.style("fill-opacity","0")
+		.style("fill","green")
+		.text("Reticulating splines...");
+	chart.selectAll(".notausgang").transition()
+		.duration(1600)
+		.style("fill-opacity","1")
+		.style("font-size","48");
+	chart.selectAll("circle").transition()
+		.duration(1600)
+		.attr("r", function(d) { return 100*rad(d.Length); });
+	window.setTimeout(function() { 
+		window.location.href = "https://www.youtube.com/watch?v=oHg5SJYRHA0";
+		}, 1600);
 }

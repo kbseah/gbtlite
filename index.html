@@ -10,20 +10,21 @@
 <h1>gbtlite - Visualize metagenomes in a web browser</h1>
 <div id="frontmatter" style="width:600px;margin:auto">
 <p>Powered by <a href="https://d3js.org/">D3.js</a> version 4. Best viewed in a desktop browser.</p>
-<p><i>Instructions</i>: Load coverage statistics ("covstats") file produced by the <a href="https://sourceforge.net/projects/bbmap/">bbmap.sh read mapper</a> (but first remove # character from header line) and click "Draw graphs". Mouseover on coverage-GC plot gives info on individual contigs. See demo data for examples. More documentation on <a href="https://github.com/kbseah/gbtlite/">GitHub repository page</a>.</p>
-<p><i>Download demo data</i>: <a href="SampleA2.covstats">gutless oligochaete worm</a> (<a href="http://genome.jgi.doe.gov/OlaalgELextract2/OlaalgELextract2.info.html">ref</a>) | <a href="AB_assem_megahit.covstats">artificial metagenome</a> (<a href="https://www.ncbi.nlm.nih.gov/pubmed/23387867">ref</a>)</p>
+<p><i>Instructions</i>: Load coverage statistics ("covstats") file produced by the <a href="https://sourceforge.net/projects/bbmap/">bbmap.sh read mapper</a> (but first remove # character from header line). See demo data for examples. Click "Draw graphs" after loading file. Mouseover on coverage-GC plot gives info on individual contigs. Click and drag to pan, use mouse scrollwheel to zoom. More documentation on <a href="https://github.com/kbseah/gbtlite/">GitHub repository page</a>.</p>
+<p><i>Caution</i>: Performance will slow and browser may hang at >1000 data points.</p>
+<p><i>Download demo data</i>: <a href="data.tsv">gutless oligochaete, subsample</a> (<a href="http://genome.jgi.doe.gov/OlaalgELextract2/OlaalgELextract2.info.html">ref</a>) | <a href="AB_assem_megahit.covstats">artificial metagenome</a> (<a href="https://www.ncbi.nlm.nih.gov/pubmed/23387867">ref</a>)</p>
 </div>
 
 <div class="input">
 	<p>
 	Input: 
 	<input type="file" onchange="loadFile()" />
-	<button onclick="drawGraph(data1,'blue')">Draw graphs</button>
+	<button onclick="drawGraph(data1,'blue',1000)">Draw graphs</button>
 	<button onclick="randomColor()">Random color</button>
+	<button onclick="notausgang()">Do not click here</button>
 	</p>
 	<p>
 	Filter by contig length: 
-	<button onclick="filter(500)">500bp</button>
 	<button onclick="filter(1000)">1kbp</button>
 	<button onclick="filter(10000)">10kbp</button>
 	<button onclick="filter(100000)">100kbp</button>
