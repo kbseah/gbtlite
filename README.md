@@ -4,9 +4,11 @@
 
 View coverage-GC plots of metagenome assemblies in your web browser with `gbtlite`. These plots are useful in quality control of metagenomic data, and in guiding the binning of individual genomes from metagenomes.
 
-`gbtlite` implements these visualizations using the [D3.js library](http://d3js.org). 
+`gbtlite` implements these visualizations using the [D3.js library](http://d3js.org).
 
-<a href="https://kbseah.github.io/gbtlite/">Try it out here!</a> 
+<a href="https://kbseah.github.io/gbtlite/">Try it out here!</a>
+
+<img src="screenshot.png" width=500 />
 
 If you find this useful, consider trying the full [`gbtools` package for R](https://github.com/kbseah/genome-bin-tools), which allows selection and manipulation of bins, in addition to visualization.
 
@@ -28,4 +30,4 @@ Refer to the `gbtools` manual for [instructions and example commands](https://gi
 
 Brandon Seah - kbseah@mpi-bremen.de
 
-Please report bugs etc. with the GitHub issues tracker 
+Please report bugs etc. with the GitHub issues tracker
